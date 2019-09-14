@@ -1,5 +1,5 @@
 import * as SAX from '@calmdownval/xml-sax';
-import Document from '@calmdownval/mini-dom';
+import { Document } from '@calmdownval/mini-dom';
 import { bindEvents } from './builder.mjs';
 import { stringify } from './breaker.mjs';
 

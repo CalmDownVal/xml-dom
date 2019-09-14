@@ -1,3 +1,5 @@
+import Scope from './Scope.mjs';
+
 function startsWith(str, sub)
 {
 	const l0 = str.length;
@@ -23,25 +25,110 @@ function startsWith(str, sub)
 	return true;
 }
 
+function splitToken(token)
+{
+	const index = token.indexOf(':');
+	return index === -1 ? null : [ token.slice(0, index), token.slice(index + 1) ];
+}
+
 export function bindEvents(document, options)
 {
 	const stack = [];
-	let current = document;
+	const scope = new Scope();
 
-	// TODO: recognize namespaces
+	let current = document;
+	let attributes;
+
 	return {
 		...options,
-		onTagOpen(name)
+		onTagOpen(/* name */)
 		{
-			stack.push(current);
-
-			const node = document.createElement(name);
-			current.appendChild(node);
-			current = node;
+			scope.sink();
 		},
 		onAttribute(name, value)
 		{
-			current.setAttribute(name, value);
+			if (startsWith(name, 'xmlns'))
+			{
+				scope.set(name[5] === ':' ? name.slice(6) : Scope.DEFAULT, value);
+			}
+			else
+			{
+				(attributes = attributes || []).push(name, value);
+			}
+		},
+		onTagOpenEnd(name)
+		{
+			let ns;
+			let ln;
+
+			let parts = splitToken(name);
+			if (parts)
+			{
+				ns = scope.get(parts[0]);
+				ln = parts[1];
+			}
+			else
+			{
+				ns = scope.get(Scope.DEFAULT);
+				ln = name;
+			}
+
+			let element;
+			if (ns)
+			{
+				element = document.createElementNS(ns, ln);
+				if (parts)
+				{
+					element.prefix = parts[0];
+				}
+			}
+			else
+			{
+				element = document.createElement(ln);
+			}
+
+			if (attributes)
+			{
+				let attr;
+				let i;
+
+				for (i = 0; i < attributes.length; i += 2)
+				{
+					parts = splitToken(attributes[i]);
+					if (parts)
+					{
+						ns = scope.get(parts[0]);
+						ln = parts[1];
+					}
+					else
+					{
+						ns = scope.get(Scope.DEFAULT);
+						ln = attributes[i];
+					}
+
+					if (ns)
+					{
+						attr = document.createAttributeNS(ns, ln);
+						if (parts)
+						{
+							attr.prefix = parts[0];
+						}
+					}
+					else
+					{
+						attr = document.createAttribute(ln);
+					}
+
+					attr.value = attributes[i + 1];
+					element.setAttributeNodeNS(attr);
+				}
+				attributes = null;
+			}
+
+			stack.push(current);
+
+			current.appendChild(element);
+			current = element;
 		},
 		onTagClose(name/*, isSelfClosing*/)
 		{
@@ -49,6 +136,8 @@ export function bindEvents(document, options)
 			{
 				throw new Error(`unmatched closing tag </${name}>`);
 			}
+
+			scope.rise();
 			current = stack.pop();
 		},
 		onText(text)

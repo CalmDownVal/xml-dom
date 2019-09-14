@@ -1,4 +1,4 @@
-import Node from './dom/Node.mjs';
+import { Node } from '@calmdownval/mini-dom';
 
 export function stringify(node)
 {
