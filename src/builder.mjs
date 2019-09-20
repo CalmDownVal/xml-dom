@@ -41,15 +41,11 @@ export function bindEvents(document, options)
 
 	return {
 		...options,
-		onTagOpen(/* name */)
-		{
-			scope.sink();
-		},
 		onAttribute(name, value)
 		{
 			if (startsWith(name, 'xmlns'))
 			{
-				scope.set(name[5] === ':' ? name.slice(6) : Scope.DEFAULT, value);
+				scope.set(name[5] === ':' ? name.slice(6) : Scope.DEFAULT, value || null);
 			}
 			else
 			{
@@ -102,7 +98,7 @@ export function bindEvents(document, options)
 					}
 					else
 					{
-						ns = scope.get(Scope.DEFAULT);
+						ns = null; // default namespaces don't affect attributes
 						ln = attributes[i];
 					}
 
@@ -126,6 +122,7 @@ export function bindEvents(document, options)
 			}
 
 			stack.push(current);
+			scope.sink();
 
 			current.appendChild(element);
 			current = element;
@@ -134,7 +131,8 @@ export function bindEvents(document, options)
 		{
 			if (current.tagName !== name)
 			{
-				throw new Error(`unmatched closing tag </${name}>`);
+				return;
+				// throw new Error(`unmatched closing tag </${name}>`);
 			}
 
 			scope.rise();
