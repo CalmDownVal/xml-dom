@@ -1,5 +1,12 @@
 import { Node } from '@calmdownval/mini-dom';
 
+const ESC =
+{
+	'"': '&quot;',
+	'<': '&lt;',
+	'&': '&amp;'
+};
+
 function childNodesOf(node)
 {
 	let str = '';
@@ -10,6 +17,28 @@ function childNodesOf(node)
 	return str;
 }
 
+function escape(str)
+{
+	const length = str.length;
+
+	let anchor = 0;
+	let index = 0;
+	let result = '';
+
+	while (index !== length)
+	{
+		const sequence = ESC[str[index]];
+		if (sequence)
+		{
+			result += str.slice(anchor, index) + sequence;
+			anchor = index + 1;
+		}
+		++index;
+	}
+
+	return result + str.slice(anchor);
+}
+
 export function stringify(node)
 {
 	if (!node || typeof node !== 'object')
@@ -17,7 +46,6 @@ export function stringify(node)
 		return typeof node === 'string' ? node : '';
 	}
 
-	// TODO: namespaces
 	switch (node && node.nodeType)
 	{
 		case Node.ELEMENT_NODE:
@@ -25,8 +53,7 @@ export function stringify(node)
 			let attrs = '';
 			for (const attr of node.attributes)
 			{
-				// TODO: escape value
-				attrs += ` ${attr.name}="${attr.value}"`;
+				attrs += ` ${attr.name}="${escape(attr.value)}"`;
 			}
 
 			const children = childNodesOf(node);
