@@ -1,6 +1,6 @@
 {
 	"name": "@calmdownval/xml-dom",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"type": "module",
 	"main": "src/index.mjs",
 	"license": "MIT",
@@ -16,7 +16,7 @@
 		"url": "https://github.com/vaclavlahuta/xml-dom.git"
 	},
 	"dependencies": {
-		"@calmdownval/mini-dom": "^0.0.5",
+		"@calmdownval/mini-dom": "^0.0.7",
 		"@calmdownval/xml-sax": "^0.0.3"
 	}
 }

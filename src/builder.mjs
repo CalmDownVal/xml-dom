@@ -25,10 +25,10 @@ function startsWith(str, sub)
 	return true;
 }
 
-function splitToken(token)
+function getPrefix(name)
 {
-	const index = token.indexOf(':');
-	return index === -1 ? null : [ token.slice(0, index), token.slice(index + 1) ];
+	const index = name.indexOf(':');
+	return index > 0 && index !== name.length ? name.slice(0, index) : null;
 }
 
 export function bindEvents(document, options)
@@ -57,68 +57,45 @@ export function bindEvents(document, options)
 
 			attributes.push(name, value);
 		},
-		onTagOpenEnd(name)
+		onTagOpenEnd(tagName)
 		{
-			let ns;
-			let ln;
-			let i;
+			let i = 0;
 			let attr;
-			let parts = splitToken(name);
+			let prefix = getPrefix(tagName);
+			let ns = scope.get(prefix || Scope.DEFAULT);
 
-			if (parts)
-			{
-				ns = scope.get(parts[0]);
-				ln = parts[1];
-			}
-			else
-			{
-				ns = scope.get(Scope.DEFAULT);
-				ln = name;
-			}
+			const element = ns
+				? document.createElementNS(ns, tagName)
+				: document.createElement(tagName);
 
-			const element = document.createElementNS(ns, ln);
-			if (parts)
+			while (i < attributes.length)
 			{
-				element.prefix = parts[0];
-			}
+				prefix = getPrefix(attributes[i]);
+				ns = prefix ? scope.get(prefix) : null; // default namespaces don't apply to attributes
 
-			while (i <= attributes.length)
-			{
-				parts = splitToken(attributes[i]);
-				if (parts)
-				{
-					ns = scope.get(parts[0]);
-					ln = parts[1];
-				}
-				else
-				{
-					ns = null; // default namespaces don't affect attributes
-					ln = attributes[i];
-				}
-
-				attr = document.createAttributeNS(ns, ln);
-				if (parts)
-				{
-					attr.prefix = parts[0];
-				}
+				attr = ns
+					? document.createAttributeNS(ns, attributes[i])
+					: document.createAttribute(attributes[i]);
 
 				attr.value = attributes[++i];
-				element.setAttributeNodeNS(attr);
+				element.setAttributeNode(attr);
 				++i;
 			}
 
+			attributes = [];
+
 			stack.push(current);
 			scope.sink();
+
 			current.appendChild(element);
 			current = element;
-			attributes = [];
 		},
-		onTagClose(name/*, isSelfClosing*/)
+		onTagClose(tagName/*, isSelfClosing*/)
 		{
-			if (current.tagName !== name)
+			if (current.tagName !== tagName)
 			{
 				return;
-				// throw new Error(`unmatched closing tag </${name}>`);
+				// throw new Error(`unmatched closing tag </${tagName}>`);
 			}
 
 			scope.rise();
