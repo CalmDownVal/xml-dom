@@ -18,6 +18,16 @@ export default class Scope
 
 	set(ns, uri)
 	{
+		if (ns === 'xmlns')
+		{
+			return;
+		}
+
+		if (!(uri && typeof uri === 'string'))
+		{
+			uri = null;
+		}
+
 		const list = this.#dict[ns];
 		if (list)
 		{

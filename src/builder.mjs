@@ -37,7 +37,7 @@ export function bindEvents(document, options)
 	const scope = new Scope();
 
 	let current = document;
-	let attributes;
+	let attributes = [];
 
 	return {
 		...options,
@@ -45,19 +45,26 @@ export function bindEvents(document, options)
 		{
 			if (startsWith(name, 'xmlns'))
 			{
-				scope.set(name[5] === ':' ? name.slice(6) : Scope.DEFAULT, value || null);
+				if (name.length === 5)
+				{
+					scope.set(Scope.DEFAULT, value);
+				}
+				else if (name[5] === ':')
+				{
+					scope.set(name.slice(6), value);
+				}
 			}
-			else
-			{
-				(attributes = attributes || []).push(name, value);
-			}
+
+			attributes.push(name, value);
 		},
 		onTagOpenEnd(name)
 		{
 			let ns;
 			let ln;
-
+			let i;
+			let attr;
 			let parts = splitToken(name);
+
 			if (parts)
 			{
 				ns = scope.get(parts[0]);
@@ -69,63 +76,42 @@ export function bindEvents(document, options)
 				ln = name;
 			}
 
-			let element;
-			if (ns)
+			const element = document.createElementNS(ns, ln);
+			if (parts)
 			{
-				element = document.createElementNS(ns, ln);
+				element.prefix = parts[0];
+			}
+
+			while (i <= attributes.length)
+			{
+				parts = splitToken(attributes[i]);
 				if (parts)
 				{
-					element.prefix = parts[0];
+					ns = scope.get(parts[0]);
+					ln = parts[1];
 				}
-			}
-			else
-			{
-				element = document.createElement(ln);
-			}
-
-			if (attributes)
-			{
-				let attr;
-				let i;
-
-				for (i = 0; i < attributes.length; i += 2)
+				else
 				{
-					parts = splitToken(attributes[i]);
-					if (parts)
-					{
-						ns = scope.get(parts[0]);
-						ln = parts[1];
-					}
-					else
-					{
-						ns = null; // default namespaces don't affect attributes
-						ln = attributes[i];
-					}
-
-					if (ns)
-					{
-						attr = document.createAttributeNS(ns, ln);
-						if (parts)
-						{
-							attr.prefix = parts[0];
-						}
-					}
-					else
-					{
-						attr = document.createAttribute(ln);
-					}
-
-					attr.value = attributes[i + 1];
-					element.setAttributeNodeNS(attr);
+					ns = null; // default namespaces don't affect attributes
+					ln = attributes[i];
 				}
-				attributes = null;
+
+				attr = document.createAttributeNS(ns, ln);
+				if (parts)
+				{
+					attr.prefix = parts[0];
+				}
+
+				attr.value = attributes[++i];
+				element.setAttributeNodeNS(attr);
+				++i;
 			}
 
 			stack.push(current);
 			scope.sink();
-
 			current.appendChild(element);
 			current = element;
+			attributes = [];
 		},
 		onTagClose(name/*, isSelfClosing*/)
 		{
