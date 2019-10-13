@@ -16,7 +16,7 @@
 		"url": "https://github.com/vaclavlahuta/xml-dom.git"
 	},
 	"dependencies": {
-		"@calmdownval/mini-dom": "^0.0.7",
+		"@calmdownval/mini-dom": "^0.0.8",
 		"@calmdownval/xml-sax": "^0.0.3"
 	}
 }
