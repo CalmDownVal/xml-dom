@@ -1,4 +1,4 @@
-import * as SAX from '@calmdownval/xml-sax';
+import { parse, parseStream } from '@calmdownval/xml-sax';
 import { Document } from '@calmdownval/mini-dom';
 import { bindEvents } from './builder.mjs';
 import { stringify } from './breaker.mjs';
@@ -8,7 +8,7 @@ function parse(str)
 	const document = new Document();
 	const events = bindEvents(document);
 
-	SAX.parse(str, events);
+	parse(str, events);
 	return document;
 }
 
@@ -17,7 +17,7 @@ async function parseStream(readable)
 	const document = new Document();
 	const events = bindEvents(document);
 
-	await SAX.parseStream(readable, events);
+	await parseStream(readable, events);
 	return document;
 }
 

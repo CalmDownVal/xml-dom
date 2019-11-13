@@ -1,4 +1,4 @@
-import Scope from './Scope.mjs';
+import { NameSpace } from './NameSpace.mjs';
 
 function startsWith(str, sub)
 {
@@ -34,7 +34,7 @@ function getPrefix(name)
 export function bindEvents(document, options)
 {
 	const stack = [];
-	const scope = new Scope();
+	const ns = new NameSpace();
 
 	let current = document;
 	let attributes = [];
@@ -47,11 +47,11 @@ export function bindEvents(document, options)
 			{
 				if (name.length === 5)
 				{
-					scope.set(Scope.DEFAULT, value);
+					ns.set(NameSpace.DEFAULT, value);
 				}
 				else if (name[5] === ':')
 				{
-					scope.set(name.slice(6), value);
+					ns.set(name.slice(6), value);
 				}
 			}
 
@@ -62,7 +62,7 @@ export function bindEvents(document, options)
 			let i = 0;
 			let attr;
 			let prefix = getPrefix(tagName);
-			let ns = scope.get(prefix || Scope.DEFAULT);
+			let ns = ns.get(prefix || NameSpace.DEFAULT);
 
 			const element = ns
 				? document.createElementNS(ns, tagName)
@@ -71,7 +71,7 @@ export function bindEvents(document, options)
 			while (i < attributes.length)
 			{
 				prefix = getPrefix(attributes[i]);
-				ns = prefix ? scope.get(prefix) : null; // default namespaces don't apply to attributes
+				ns = prefix ? ns.get(prefix) : null; // default namespaces don't apply to attributes
 
 				attr = ns
 					? document.createAttributeNS(ns, attributes[i])
@@ -85,7 +85,7 @@ export function bindEvents(document, options)
 			attributes = [];
 
 			stack.push(current);
-			scope.sink();
+			ns.sink();
 
 			current.appendChild(element);
 			current = element;
@@ -98,7 +98,7 @@ export function bindEvents(document, options)
 				// throw new Error(`unmatched closing tag </${tagName}>`);
 			}
 
-			scope.rise();
+			ns.rise();
 			current = stack.pop();
 		},
 		onText(text)
