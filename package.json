@@ -14,7 +14,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/vaclavlahuta/xml-dom.git"
+		"url": "https://github.com/CalmDownVal/xml-dom.git"
 	},
 	"dependencies": {
 		"@calmdownval/mini-dom": "^0.0.8",
